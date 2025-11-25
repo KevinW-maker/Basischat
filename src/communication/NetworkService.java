@@ -29,20 +29,12 @@ public interface NetworkService {
      */
     void sendMessage(String message);
 
-    /**
-     * Trennt die aktuelle Verbindung.
-     */
+
     void disconnect();
 
-    /**
-     * Fügt einen Beobachter (Listener) hinzu.
-     * @param listener Der Beobachter, der benachrichtigt werden soll
-     */
+
     void addMessageListener(MessageListener listener);
 
-    /**
-     * Entfernt einen Beobachter.
-     * @param listener Der Beobachter, der nicht mehr benachrichtigt werden soll
-     */
+
     void removeMessageListener(MessageListener listener);
 }
