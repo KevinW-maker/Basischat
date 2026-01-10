@@ -13,8 +13,10 @@ public class ClientHandler implements Runnable {
     private final Socket socket;
     private final ChatServer server;
     private final UserManager userManager;
+
     private PrintWriter out;
     private BufferedReader in;
+
     private String username = "Unbekannt";
     private boolean isAuthenticated = false;
 
@@ -47,6 +49,9 @@ public class ClientHandler implements Runnable {
                         if (userManager.checkCredentials(user, pass)) {
                             this.username = user;
                             this.isAuthenticated = true;
+
+                            server.getStatusManager().setStatus(username, "Online");
+
                             out.println(">> Login erfolgreich! Willkommen, " + username);
                             server.broadcast(">> " + username + " ist dem Chat beigetreten.", this);
                         } else {
@@ -62,7 +67,6 @@ public class ClientHandler implements Runnable {
                 }
             }
 
-
             while ((line = in.readLine()) != null) {
                 if (line.trim().isEmpty()) continue;
 
@@ -70,7 +74,25 @@ public class ClientHandler implements Runnable {
                     break;
                 }
 
-                server.broadcast(username + ": " + line, this);
+                else if (line.startsWith("/status ")) {
+                    String newStatus = line.substring(8).trim();
+                    if (!newStatus.isEmpty()) {
+                        server.getStatusManager().setStatus(username, newStatus);
+                        server.broadcast(">> " + username + " ist jetzt: " + newStatus, this);
+                    }
+                }
+
+                else {
+                    String currentStatus = server.getStatusManager().getStatus(username);
+                    String prefix = "";
+
+                    if (!currentStatus.equalsIgnoreCase("Online")) {
+                        prefix = "[" + currentStatus + "] ";
+                    }
+
+
+                    server.broadcast(prefix + username + ": " + line, this);
+                }
             }
 
         } catch (IOException e) {
@@ -80,15 +102,18 @@ public class ClientHandler implements Runnable {
         }
     }
 
+
     public void sendMessage(String message) {
         if (out != null) {
             out.println(message);
         }
     }
 
+
     private void closeConnection() {
         System.out.println("Schließe Verbindung für: " + username);
         server.removeClient(this);
+
         try {
             if (out != null) out.close();
             if (in != null) in.close();

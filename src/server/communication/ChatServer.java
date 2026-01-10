@@ -1,8 +1,11 @@
 package server.communication;
 
 import server.usermanagement.UserManager;
+import server.features.status.StatusManager;
+import server.features.logging.IChatLogger;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.List;
@@ -13,9 +16,27 @@ public class ChatServer {
     private final List<ClientHandler> clients = new CopyOnWriteArrayList<ClientHandler>();
 
     private final UserManager userManager;
+    private final StatusManager statusManager; // Feature 1
+
+    private IChatLogger logger; // Feature 2
 
     public ChatServer() {
         this.userManager = new UserManager();
+        this.statusManager = new StatusManager();
+
+        try {
+            System.out.println("Lade Logging-Modul...");
+
+            Class<?> clazz = Class.forName("server.features.logging.FileLogger");
+
+            Constructor<?> ctor = clazz.getConstructor();
+            this.logger = (IChatLogger) ctor.newInstance();
+
+            System.out.println("✅ PRO-VERSION: Logging-Modul erfolgreich geladen!");
+        } catch (Exception e) {
+            System.out.println("ℹ️ NORMAL-VERSION: Kein Logging-Modul gefunden. Server läuft ohne Logs.");
+            this.logger = null;
+        }
     }
 
     public void start(int port) {
@@ -41,6 +62,11 @@ public class ChatServer {
 
 
     public void broadcast(String message, ClientHandler sender) {
+
+        if (logger != null) {
+            logger.log(message);
+        }
+
         for (ClientHandler client : clients) {
             if (client != sender) {
                 client.sendMessage(message);
@@ -52,5 +78,10 @@ public class ChatServer {
     public void removeClient(ClientHandler client) {
         clients.remove(client);
         System.out.println("Client entfernt. Aktuelle User: " + clients.size());
+    }
+
+
+    public StatusManager getStatusManager() {
+        return statusManager;
     }
 }
