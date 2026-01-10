@@ -9,7 +9,7 @@ public class ConsoleUI implements MessageListener {
 
     private final CommandInterpreter interpreter;
     private final NetworkService networkService;
-    private String username = "User"; // Standard-Benutzername
+    private String username = "User";
 
     public ConsoleUI(CommandInterpreter interpreter, NetworkService networkService) {
         this.interpreter = interpreter;
